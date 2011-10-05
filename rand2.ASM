@@ -6,7 +6,9 @@
 ; GENERATES PSEUDO-RANDOM INTEGERS IN THE RANGE LOWER TO UPPER
 ; INPUT:  TWO STACK PARAMETERS - LOWER AND UPPER ENDS OF RANGE
 ; OUTPUT: AX-REG CONTAINS RANDOM INTEGER
-; CALLING SEQUENCE:     PUSH    <LOWER END OF RANGE>
+; CALLING SEQUENCE:     
+;						CALL	RESEED to set seed
+;						PUSH    <LOWER END OF RANGE>
 ;                       PUSH    <UPPER END OF RANGE>
 ;                       CALL    RANDOM
 ;===================================================================
@@ -22,20 +24,20 @@
 	SEED		DW		?
 	MULTIPLIER	DW		25173
 	ADDEND		DW		13849
-	FIRST_CALL	DB		TRUE
 
 .CODE	RAND
 	ASSUME		DS:RAND_DATA
 	RANDOM	PROC	FAR PUBLIC USES CX DX DS,
 					LOWER:WORD, UPPER:WORD
-					
+
 		PUSHF
 		MOV	AX,SEG RAND_DATA
 		MOV	DS,AX
 		
-		.IF	FIRST_CALL == TRUE
-			MOV		FIRST_CALL,FALSE
-			MOV		SEED,DX
+		.IF	BL == TRUE					;First call set in reseed
+			MOV		BL,FALSE
+			MOV		SEED,DX				;DX set in RESEED
+
 		.ENDIF
 		
 		MOV		AX,SEED
@@ -72,6 +74,7 @@
 			MOV		DX,AX		; Seed = AX passed value
 
 		cont:
+			MOV		BL,TRUE		; BL resets first call in RANDOM
 			RET
 	RESEED		ENDP
 	END

@@ -45,35 +45,47 @@ randmain:
 	CALL	NEWLINE
 	CALL	NEWLINE
 
-	MOV		CX,5
+
 	
-	MOV		BL,0
+	MOV		BL,1
 	MOV 	AX,5555h
-	CALL	RESEED
-
-	call_loop:
-		PUSH	LOWER
-		PUSH	UPPER
-		CALL	RANDOM
-		
-		display_result:
-			PUSH	BX
-			MOV		BH,0
-			CALL	PUTDEC$
-			POP		BX
-
-			CMP		CX,1
-			JE		skip_delim
-		deliminator:
-			PUSH 	CX
-			LEA		DI,DELIM
-			MOV		CX,2
-			CALL 	PUTSTRNG
-			POP		CX
-		skip_delim:
-			CALL NEWLINE
-	LOOP call_loop
 	
+	MOV		CX,2
+	batch_loop:
+	PUSH	CX
+	
+		CALL	RESEED
+		
+		MOV		CX,100
+		call_loop:
+			PUSH	LOWER
+			PUSH	UPPER
+			CALL	RANDOM
+			
+			display_result:
+				PUSH	BX
+				MOV		BH,0
+				CALL	PUTDEC$
+				POP		BX
+
+				CMP		CX,1
+				JE		skip_delim
+			deliminator:
+				PUSH 	CX
+				LEA		DI,DELIM
+				MOV		CX,2
+				CALL 	PUTSTRNG
+				POP		CX
+			skip_delim:
+				;CALL NEWLINE
+		LOOP call_loop		
+		POP		CX	
+		
+		MOV		BL,0
+		CALL NEWLINE
+		CALL NEWLINE
+	
+	LOOP batch_loop
 	; cleanup
 	CALL NEWLINE
 	MOV		CX,25
