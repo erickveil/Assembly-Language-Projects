@@ -12,114 +12,67 @@
 ;===================================================================
 .MODEL	SMALL,BASIC
 
-EXTRN	PUTHEX:FAR
-EXTRN	PUTDEC$:FAR
-EXTRN	NEWLINE:FAR
-;===================================================================
-FALSE	EQU	0                   ;CONSTANT FALSE
-TRUE	EQU	1                   ;CONSTANT TRUE
-;===================================================================
-; D A T A   S E G M E N T   D E F I N I T I O N
+	EXTRN		PUTHEX:FAR
+	EXTRN		PUTDEC$:FAR
+	EXTRN		NEWLINE:FAR
+
+	FALSE		EQU	0
+	TRUE		EQU	1
 .FARDATA RAND_DATA
-SEED		DW		?				;SEED FOR RANDOM NUMBER GEN.
-ALTSEED		DW		0
-MULTIPLIER	DW		25173			;MULTIPLIER AND
-ADDEND		DW		13849			;ADDEND FOR MIXED
-									;LINEAR CONGRUENTIAL METHOD
-FIRST_CALL	DB		TRUE			;FIRST CALL FLAG
-;===================================================================
-; C O D E   S E G M E N T   D E F I N I T I O N
-;
-.CODE		RAND
-ASSUME		DS:RAND_DATA
-;
-RANDOM		PROC	FAR PUBLIC USES CX DX DS,
+	SEED		DW		?
+	MULTIPLIER	DW		25173
+	ADDEND		DW		13849
+	FIRST_CALL	DB		TRUE
+
+.CODE	RAND
+	ASSUME		DS:RAND_DATA
+	RANDOM	PROC	FAR PUBLIC USES CX DX DS,
 					LOWER:WORD, UPPER:WORD
-									;FUNCTION RANDOM(LOWER,UPPER)
-									;SAVE REGISTERS (USES LIST)
-	PUSHF							;SAVE FLAGS (pushung AX before this messes up AX REG)
-	
-	PUSH AX
-	MOV		AX,SEG RAND_DATA		;SET DS-REGISTER TO POINT
-	MOV		DS,AX					;TO LOCAL DATA SEGMENT
-	POP AX
+					
+		PUSHF
+		MOV	AX,SEG RAND_DATA
+		MOV	DS,AX
+		
+		.IF	FIRST_CALL == TRUE
+			MOV		FIRST_CALL,FALSE
+			MOV		SEED,DX
+		.ENDIF
+		
+		MOV		AX,SEED
+		MUL		MULTIPLIER
+		ADD		AX,ADDEND
+		MOV		SEED,AX
+		MOV		CX,UPPER
+		SUB		CX,LOWER
+		INC		CX
+		MUL		CX
+		ADD		DX,LOWER
+		MOV		AX,DX
+		POPF
+		RET
+	RANDOM     ENDP
 
-
-							;PUSH BX
-							;MOV BL,1
-							;CALL PUTHEX
-							;CALL NEWLINE
-							;POP BX
-
-
-		CALL RESEED
-
-
-
-	MOV		AX,SEED					;X = SEED * MULTIPLIER mod
-	
-							; 5555h seed is getting messed up here																																
-							PUSH BX
-							MOV BL,1
-							CALL PUTHEX
-							CALL NEWLINE
-							POP BX
-								
-	
-	MUL		MULTIPLIER				;65536
-	ADD		AX,ADDEND				;SEED = (X + ADDEND) mod 65536
-	MOV		SEED,AX
-	MOV		CX,UPPER				;RANGE = UPPER - LOWER + 1
-	SUB		CX,LOWER
-	INC		CX
-	MUL		CX						;RANDOM = (SEED*RANGE)/65536
-	ADD		DX,LOWER				;+ LOWER
-	MOV		AX,DX
-	POPF							;RESTORE FLAGS
-									;RESTORE REGISTERS (ASSEMBLER
-									;GENERATES INSTRUCTIONS TO
-									;RESTORE REGISTERS - USES)
-	RET								;RETURN (RANDOM)
-RANDOM		ENDP				;END RANDOM
-
-COMMENT *
-	RESEED
-	Erick Veil
-	10-04-11
-	
-	BL=0 use clock to seed
-	BL=any other number, use AX to seed
-*
-RESEED		PROC	FAR	PUBLIC
-
-
-	; Check BL for seed option
+	COMMENT *
+		RESEED
+		Erick Veil
+		10-04-11
+		
+		BL=0 use clock to seed
+		BL=any other number, use AX to seed
+	*
+	RESEED		PROC	FAR	PUBLIC
 		CMP		BL,1
 		JE		alt_seed
-
 		
 		clock_seed:
-		.IF		FIRST_CALL == TRUE		;IF   FIRST_CALL
-			MOV		FIRST_CALL,FALSE		;FIRST_CALL = FALSE	
-			
-			MOV		AH,0				;SEED = LOWER HALF OF
-			INT		1AH					;TIME OF DAY CLOCK
-			MOV		SEED,DX
-						
-					
-		.ENDIF                      ;ENDIF
-			
-		JMP		cont
-			
+			MOV		AH,0		;SEED = LOWER HALF OF
+			INT		1AH			;TIME OF DAY CLOCK
+			JMP		cont
 		alt_seed:
-			
-			MOV		DX,AX			; Seed = AX passed value
+			MOV		DX,AX		; Seed = AX passed value
 
-			
 		cont:
-		
-	
-	RET
-RESEED		ENDP
+			RET
+	RESEED		ENDP
 	END
 

@@ -45,67 +45,37 @@ randmain:
 	CALL	NEWLINE
 	CALL	NEWLINE
 
-	MOV		CX,2
+	MOV		CX,5
 	
-	MOV		BL,1
+	MOV		BL,0
 	MOV 	AX,5555h
+	CALL	RESEED
 
-	switch_loop:
-		PUSH	CX
-		MOV		CX,2
-		line_loop:
-			PUSH	CX
-			MOV 	CX,10	
-			
+	call_loop:
+		PUSH	LOWER
+		PUSH	UPPER
+		CALL	RANDOM
+		
+		display_result:
+			PUSH	BX
+			MOV		BH,0
+			CALL	PUTDEC$
+			POP		BX
 
-			
-			call_loop:
-
-				;save loop counter
-				PUSH	CX
-				
-				; lower
-				MOV 	DX,LOWER
-				push 	DX
-				; upper
-				MOV 	DX,UPPER
-				push 	DX
-
-
-				CALL 	RANDOM
-
-				; Display result from AX
-				MOV 	BH,0
-				CALL 	PUTDEC$
-				
-				;restore counter
-				POP CX
-				
-
-				
-				;Check for line end
-				CMP CX,1
-				JE	skip_delim
-					;Deliminator
-					PUSH 	CX
-					LEA 	DI,DELIM
-					MOV		CX,2
-					CALL 	PUTSTRNG
-					POP		CX
-				; No commas at end of lines
-				skip_delim:
-
-				LOOP	call_loop
-			CALL	NEWLINE
+			CMP		CX,1
+			JE		skip_delim
+		deliminator:
+			PUSH 	CX
+			LEA		DI,DELIM
+			MOV		CX,2
+			CALL 	PUTSTRNG
 			POP		CX
-			LOOP	line_loop
-		; next call
-		CALL	NEWLINE
-		MOV		AX,5555h
-		MOV		BL,1
-		POP 	CX
-		LOOP 	switch_loop
+		skip_delim:
+			CALL NEWLINE
+	LOOP call_loop
+	
 	; cleanup
+	CALL NEWLINE
 	MOV		CX,25
 	LEA		DI,THEEND
 	CALL	PAUSE
