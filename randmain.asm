@@ -17,7 +17,7 @@
 	EXTERN	PAUSE:FAR
 	EXTERN	CLEAR:FAR
 	
-	.STACK  256	; stack segment
+	.STACK  512	; stack segment
 	
 	.CONST
 		DELIM		DB	', '
@@ -79,6 +79,7 @@ randmain:
 		
 		batch_heads:
 			CALL BATHEAD
+			CALL NEWLINE
 
 
 		PUSH	CX	
@@ -118,7 +119,7 @@ randmain:
 	
 	LOOP batch_loop
 	report:
-		CALL TALLYDAT
+		;CALL TALLYDAT
 		;CALL PRINTDAT
 	; cleanup
 	CALL NEWLINE
@@ -127,6 +128,7 @@ randmain:
 	CALL	PAUSE
 	
 	.EXIT
+
 	
 	COMMENT *
 		COLLECTDAT
@@ -138,14 +140,18 @@ randmain:
 	COLLECTDAT		PROC	FAR	PUBLIC
 		PUSH AX
 		PUSH DX
+		PUSH CX
 		.IF BATCH == 2
 			.IF AX < 5000
 				ADD FIRST_LOW,1
 			.ELSE
 				ADD FIRST_HIGH,1
 			.ENDIF
-			MOV DX,2
-			IDIV DX
+			
+
+			
+			MOV CX,2
+			DIV CX
 			.IF DX == 1
 				ADD FIRST_ODD,1
 			.ELSE
@@ -159,14 +165,15 @@ randmain:
 				ADD SECOND_HIGH,1
 			.ENDIF
 			
-			MOV DX,2
-			IDIV DX
+			MOV CX,2
+			DIV CX
 			.IF DX == 1
 				ADD SECOND_ODD,1
 			.ELSE
 				ADD SECOND_EVEN,1
 			.ENDIF
 		.ENDIF
+		POP CX
 		POP DX
 		POP AX
 	COLLECTDAT		ENDP
@@ -307,7 +314,7 @@ randmain:
 		PUSH	DX
 		.IF BATCH == 2
 			LEA		DI,BAT1_MSG_A
-		.ELSE
+		.ELSEIF BATCH == 1
 			LEA		DI,BAT2_MSG_A
 		.ENDIF
 		MOV CX,14
