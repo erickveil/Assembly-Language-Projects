@@ -21,7 +21,7 @@
 	
 	.CONST
 		DELIM		DB	', '
-		THEEND		DB	'Press any key to finish..'
+		THEEND		DB	'Press any key to continue..'	;27
 		HEAD		DB	'*** Randmain.asm By Erick Veil ***'
 		BAT1_MSG_A	DB	'Batch 1: 5555h'			;14
 		BAT2_MSG_A	DB	'Batch 2: Clock'
@@ -77,18 +77,8 @@ randmain:
 	batch_loop:
 		MOV BATCH,CX
 		
-		batch_heads:
-
-			PUSH	CX
-			.IF BATCH == 2
-				LEA		DI,BAT1_MSG_A
-			.ELSEIF BATCH == 1
-				LEA		DI,BAT2_MSG_A
-			.ENDIF
-			MOV CX,14
-			CALL PUTSTRNG
-			POP		CX	
-			CALL NEWLINE
+		;batch_heads:
+			CALL BATHEAD
 
 		PUSH	CX	
 		CALL	RESEED
@@ -99,10 +89,10 @@ randmain:
 			PUSH	UPPER
 			CALL	RANDOM
 			
-			collect_data:
+			;collect_data:
 				CALL COLLECTDAT
 				
-			display_result:
+			;display_result:
 				PUSH	BX
 				MOV		BH,0
 				CALL	PUTDEC$
@@ -110,28 +100,34 @@ randmain:
 
 				CMP		CX,1
 				JE		skip_delim
-			deliminator:
+			;deliminator:
 				PUSH 	CX
 				LEA		DI,DELIM
 				MOV		CX,2
 				CALL 	PUTSTRNG
 				POP		CX
 			skip_delim:
-				;CALL NEWLINE
+
 		LOOP call_loop		
 		POP		CX	
 		
 		MOV		BL,0
 		CALL NEWLINE
 		CALL NEWLINE
-	
+		PUSH	CX
+		MOV		CX,27
+		LEA		DI,THEEND
+		CALL	PAUSE
+		POP		CX
+		CALL NEWLINE
+		
 	LOOP batch_loop
-	report:
-		;CALL TALLYDAT
-		;CALL PRINTDAT
+	;report:
+		CALL TALLYDAT
+		CALL PRINTDAT
 	; cleanup
 	CALL NEWLINE
-	MOV		CX,25
+	MOV		CX,27
 	LEA		DI,THEEND
 	CALL	PAUSE
 	
@@ -156,14 +152,6 @@ randmain:
 				ADD FIRST_HIGH,1
 			.ENDIF
 			
-							
-		;				PUSH BX
-		;				MOV BH,0
-		;				CALL NEWLINE
-		;				CALL PUTDEC$
-		;				CALL NEWLINE
-		;				POP BX
-										
 			MOV DX,0
 			MOV CX,2
 			DIV CX
@@ -262,6 +250,7 @@ randmain:
 		MOV		CX,25
 		LEA		DI,TOT_MSG
 		CALL	PUTSTRNG
+		CALL NEWLINE
 		
 		MOV		CX,7
 		LEA		DI,EV_MSG
@@ -319,6 +308,27 @@ randmain:
 		POP AX
 		RET
 	TALLYDAT		ENDP
+	
+	COMMENT *
+		BATHEAD
+		Erick Veil
+		10-05-11
+		
+		Batch Headders
+	*
+	BATHEAD		PROC	NEAR	PUBLIC
+		PUSH	CX
+		.IF BATCH == 2
+			LEA		DI,BAT1_MSG_A
+		.ELSEIF BATCH == 1
+			LEA		DI,BAT2_MSG_A
+		.ENDIF
+		MOV CX,14
+		CALL PUTSTRNG
+		POP		CX	
+		CALL NEWLINE
+		RET
+	BATHEAD		ENDP
 	
 END     randmain
 ;===================================================================
