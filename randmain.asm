@@ -78,9 +78,17 @@ randmain:
 		MOV BATCH,CX
 		
 		batch_heads:
-			CALL BATHEAD
-			CALL NEWLINE
 
+			PUSH	CX
+			.IF BATCH == 2
+				LEA		DI,BAT1_MSG_A
+			.ELSEIF BATCH == 1
+				LEA		DI,BAT2_MSG_A
+			.ENDIF
+			MOV CX,14
+			CALL PUTSTRNG
+			POP		CX	
+			CALL NEWLINE
 
 		PUSH	CX	
 		CALL	RESEED
@@ -128,7 +136,6 @@ randmain:
 	CALL	PAUSE
 	
 	.EXIT
-
 	
 	COMMENT *
 		COLLECTDAT
@@ -148,7 +155,12 @@ randmain:
 				ADD FIRST_HIGH,1
 			.ENDIF
 			
-
+			PUSH BX
+			MOV BH,0
+			;CALL NEWLINE
+			;CALL PUTDEC$
+			;CALL NEWLINE
+			POP BX
 			
 			MOV CX,2
 			DIV CX
@@ -301,27 +313,6 @@ randmain:
 		
 		POP AX
 	TALLYDAT		ENDP
-
-	COMMENT *
-		BATHEAD
-		Erick Veil
-		10-05-11
-		
-		Prints headers for batches
-	*
-	BATHEAD		PROC	FAR	PUBLIC
-		PUSH	CX
-		PUSH	DX
-		.IF BATCH == 2
-			LEA		DI,BAT1_MSG_A
-		.ELSEIF BATCH == 1
-			LEA		DI,BAT2_MSG_A
-		.ENDIF
-		MOV CX,14
-		CALL PUTSTRNG
-		POP		DX
-		POP		CX	
-	BATHEAD		ENDP
 	
 END     randmain
 ;===================================================================
