@@ -100,7 +100,7 @@ randmain:
 			CALL	RANDOM
 			
 			collect_data:
-				;CALL COLLECTDAT
+				CALL COLLECTDAT
 				
 			display_result:
 				PUSH	BX
@@ -144,50 +144,54 @@ randmain:
 		
 		Collects data on random numbers
 	*
-	COLLECTDAT		PROC	FAR	PUBLIC
+	COLLECTDAT		PROC	NEAR	PUBLIC
 		PUSH AX
 		PUSH DX
 		PUSH CX
-		.IF BATCH == 2
-			.IF AX < 5000
-				ADD FIRST_LOW,1
-			.ELSE
-				ADD FIRST_HIGH,1
-			.ENDIF
+
+		;.IF BATCH == 2
+		;	.IF AX < 5000
+		;		ADD FIRST_LOW,1
+		;	.ELSE
+		;		ADD FIRST_HIGH,1
+		;	.ENDIF
 			
-			PUSH BX
-			MOV BH,0
-			;CALL NEWLINE
-			;CALL PUTDEC$
-			;CALL NEWLINE
-			POP BX
+							
+		;				PUSH BX
+		;				MOV BH,0
+		;				CALL NEWLINE
+		;				CALL PUTDEC$
+		;				CALL NEWLINE
+		;				POP BX
+										
 			
-			MOV CX,2
-			DIV CX
-			.IF DX == 1
-				ADD FIRST_ODD,1
-			.ELSE
-				ADD FIRST_EVEN,1
-			.ENDIF
+		;	MOV CX,2
+			;DIV CX
+			;.IF DX == 1
+			;	ADD FIRST_ODD,1
+			;.ELSE
+			;	ADD FIRST_EVEN,1
+			;.ENDIF
 			
-		.ELSE
-			.IF AX < 5000
-				ADD SECOND_LOW,1
-			.ELSE
-				ADD SECOND_HIGH,1
-			.ENDIF
+		;.ELSE
+		;	.IF AX < 5000
+		;		ADD SECOND_LOW,1
+		;	.ELSE
+		;		ADD SECOND_HIGH,1
+		;	.ENDIF
 			
-			MOV CX,2
-			DIV CX
-			.IF DX == 1
-				ADD SECOND_ODD,1
-			.ELSE
-				ADD SECOND_EVEN,1
-			.ENDIF
-		.ENDIF
+			;MOV CX,2
+			;DIV CX
+			;.IF DX == 1
+			;	ADD SECOND_ODD,1
+			;.ELSE
+			;	ADD SECOND_EVEN,1
+			;.ENDIF
+		;.ENDIF
 		POP CX
 		POP DX
 		POP AX
+		RET
 	COLLECTDAT		ENDP
 	
 	COMMENT *
@@ -197,7 +201,7 @@ randmain:
 		
 		Prints data on random numbers
 	*
-	PRINTDAT		PROC	FAR	PUBLIC
+	PRINTDAT		PROC	NEAR	PUBLIC
 		CALL	NEWLINE
 		MOV		CX,25
 		LEA		DI,BAT1_MSG_B
@@ -288,7 +292,7 @@ randmain:
 		
 		Calculates Totals
 	*
-	TALLYDAT		PROC	FAR	PUBLIC
+	TALLYDAT		PROC	NEAR	PUBLIC
 		PUSH AX
 		
 		MOV AX,0
