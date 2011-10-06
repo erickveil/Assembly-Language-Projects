@@ -149,12 +149,12 @@ randmain:
 		PUSH DX
 		PUSH CX
 
-		;.IF BATCH == 2
-		;	.IF AX < 5000
-		;		ADD FIRST_LOW,1
-		;	.ELSE
-		;		ADD FIRST_HIGH,1
-		;	.ENDIF
+		.IF BATCH == 2
+			.IF AX < 5000
+				ADD FIRST_LOW,1
+			.ELSE
+				ADD FIRST_HIGH,1
+			.ENDIF
 			
 							
 		;				PUSH BX
@@ -164,30 +164,31 @@ randmain:
 		;				CALL NEWLINE
 		;				POP BX
 										
+			MOV DX,0
+			MOV CX,2
+			DIV CX
+			.IF DX == 1
+				ADD FIRST_ODD,1
+			.ELSE
+				ADD FIRST_EVEN,1
+			.ENDIF
 			
-		;	MOV CX,2
-			;DIV CX
-			;.IF DX == 1
-			;	ADD FIRST_ODD,1
-			;.ELSE
-			;	ADD FIRST_EVEN,1
-			;.ENDIF
+		.ELSE
+			.IF AX < 5000
+				ADD SECOND_LOW,1
+			.ELSE
+				ADD SECOND_HIGH,1
+			.ENDIF
 			
-		;.ELSE
-		;	.IF AX < 5000
-		;		ADD SECOND_LOW,1
-		;	.ELSE
-		;		ADD SECOND_HIGH,1
-		;	.ENDIF
-			
-			;MOV CX,2
-			;DIV CX
-			;.IF DX == 1
-			;	ADD SECOND_ODD,1
-			;.ELSE
-			;	ADD SECOND_EVEN,1
-			;.ENDIF
-		;.ENDIF
+			MOV DX,0
+			MOV CX,2
+			DIV CX
+			.IF DX == 1
+				ADD SECOND_ODD,1
+			.ELSE
+				ADD SECOND_EVEN,1
+			.ENDIF
+		.ENDIF
 		POP CX
 		POP DX
 		POP AX
@@ -282,7 +283,7 @@ randmain:
 		CALL	PUTSTRNG
 		MOV		AX,TOTAL_LOW
 		CALL	PUTDEC$
-		
+		RET
 	PRINTDAT		ENDP
 	
 	COMMENT *
@@ -316,6 +317,7 @@ randmain:
 		MOV TOTAL_ODD,AX
 		
 		POP AX
+		RET
 	TALLYDAT		ENDP
 	
 END     randmain
