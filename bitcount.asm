@@ -19,6 +19,7 @@ PAGE		80,132
 	MSG_NUM		DB	'Set Bits:       '	;16
 	MSG_EVN		DB	'Even number of bits.'	;20
 	MSG_ODD		DB	'Odd Number of bits.'	;19
+	MSG_CONT	DB	'Press a key to continue.. '	;26
 .CODE 
 
 MAIN	PROC	FAR	PUBLIC
@@ -26,23 +27,33 @@ MAIN	PROC	FAR	PUBLIC
 	MOV		AX,	SEG	DGROUP
 	MOV		DS,AX
 	
-	
-	; print in decimal
-	MOV		AX,TEST_WRD
-	MOV		BH,0
-	CALL	PUTDEC$
-	; print the number in bin
+	;headder
+	LEA		DI,HEAD
+	MOV		CX,32
+	CALL	PUTSTRNG
 	CALL	NEWLINE
+	CALL	NEWLINE
+	
+	;Prompt
+	LEA		DI,PROMPT
+	MOV		CX,16
+	CALL	PUTSTRNG
+	CALL	GETDEC$
+
+	; print the number in bin
+	LEA		DI,MSG_BIN
+	CALL	PUTSTRNG
 	MOV		BL,1
 	CALL	PUTBIN
 	
 	; Make call
-	MOV		BX,TEST_WRD
-	PUSH	BX
+	PUSH	AX
 	CALL 	BITCOUNT
 
 	; print the count
 	CALL	NEWLINE
+	LEA		DI,MSG_NUM
+	CALL	PUTSTRNG
 	MOV		BH,0
 	CALL	PUTDEC$
 	
@@ -52,9 +63,25 @@ MAIN	PROC	FAR	PUBLIC
 	
 	; print the result
 	CALL	NEWLINE
-	MOV		BH,0
-	CALL	PUTDEC$
+	CMP		AX,1
+	JE		ODD
 	
+	;EVEN:
+	LEA		DI,MSG_EVN
+	MOV		CX,20
+	CALL	PUTSTRNG
+	JMP		FINISH
+
+	ODD:
+	LEA		DI,MSG_ODD
+	MOV		CX,19
+	CALL	PUTSTRNG
+
+	FINISH:
+	CALL	NEWLINE
+	LEA		DI,MSG_CONT
+	MOV		CX,26
+	CALL	PAUSE	
 	
 .EXIT
 MAIN	ENDP
