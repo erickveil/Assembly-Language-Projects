@@ -5,12 +5,20 @@ EXTRN	PUTHEX:FAR
 EXTRN	PUTDEC$:FAR
 EXTERN	PUTBIN:FAR
 EXTERN	NEWLINE:FAR
+EXTERN	GETDEC$:FAR
+EXTERN	PAUSE:FAR
+EXTERN	PUTSTRNG:FAR
 
 PAGE		80,132
 .MODEL		SMALL, C
 .STACK		64
 .DATA
-	TEST_WRD	DW	15
+	HEAD		DB	'*** Parity.asm by Erick Veil ***'	;32
+	PROMPT		DB	'Enter a number: '	;16
+	MSG_BIN		DB	'Binary:         '	;16
+	MSG_NUM		DB	'Set Bits:       '	;16
+	MSG_EVN		DB	'Even number of bits.'	;20
+	MSG_ODD		DB	'Odd Number of bits.'	;19
 .CODE 
 
 MAIN	PROC	FAR	PUBLIC
@@ -23,25 +31,29 @@ MAIN	PROC	FAR	PUBLIC
 	MOV		AX,TEST_WRD
 	MOV		BH,0
 	CALL	PUTDEC$
+	; print the number in bin
+	CALL	NEWLINE
+	MOV		BL,1
+	CALL	PUTBIN
 	
 	; Make call
 	MOV		BX,TEST_WRD
 	PUSH	BX
 	CALL 	BITCOUNT
 
-	; the count
+	; print the count
 	CALL	NEWLINE
 	MOV		BH,0
 	CALL	PUTDEC$
 	
-	; the number in bin
-	CALL	NEWLINE
-	MOV		BL,1
-	MOV		AX,TEST_WRD
-	CALL	PUTBIN
+	; even or odd?	
+	PUSH	AX
+	CALL	EVENODD
 	
+	; print the result
 	CALL	NEWLINE
-	
+	MOV		BH,0
+	CALL	PUTDEC$
 	
 	
 .EXIT
@@ -74,10 +86,12 @@ COMMENT*
 	Erick Veil
 	10-13-11
 	Pre: pass a number via the stack
-	Post: returns 0 if even, 1 if odd
+	Post: returns via AX 0 if even, 1 if odd
 *
 EVENODD		PROC	NEAR PUBLIC	ONESCOUNT:WORD
-	
+	MOV		AX,ONESCOUNT
+	AND		AX,1
+	RET
 EVENODD		ENDP
 
 ; Procs here
