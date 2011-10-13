@@ -1,5 +1,12 @@
-
-
+COMMENT*
+	PARITY
+	Erick Veil
+	10-13-11
+	Counts the number of bits in a 16 bit binary word
+	returns the binary of the word, the number of set bits
+	and wether the number is even or odd.
+	Loops to conduct 5 tests, then exits.
+*
 
 EXTRN	PUTHEX:FAR
 EXTRN	PUTDEC$:FAR
