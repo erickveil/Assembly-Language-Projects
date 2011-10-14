@@ -1,3 +1,11 @@
+Parity
+
+input an unsigned word, it counts the number of set bits and determines if that number is even or odd.
+
+ml bitcount.asm io.lib
+or run mkbit.bat
+
+=====================================================
 Pseudo Random Number Generator
 
 a project to illustrate proc calls in asm.
