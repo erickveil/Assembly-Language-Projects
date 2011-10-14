@@ -1,0 +1,133 @@
+Encoding
+       ;.........3567901
+CODE	0000000000000000
+MASK_A	0000000000000111
+MASK_B	0000000000111000
+MASK_C	0000000001000000
+
+MASK_1	0000010101010101
+MASK_2	0000001100110011
+MASK_4	0000000011110000
+MASK_8	0000000000001111
+       ;.....ppDpDDDpDDD
+
+MAIN:
+ax = Prompt for unsigned word
+PACKET = ax
+
+PUSH PACKET
+CALL SETUP
+
+PUSH ax
+CALL ENCODING
+
+PUSH PACKET
+PUSH CODE
+CALL REPORT
+
+END
+
+;--------------------------
+;--------------------------
+REPORT
+in: PACKET, CODE
+
+LEA
+MOV cx
+PRINTLINE PACKET in binary
+CALL NEWLINE
+LEA
+MOV cx
+PRINTLINE PACKET in hex
+CALL NEWLINE
+LEA
+MOV cx
+PRINTLINE CODE in binary
+CALL NEWLINE
+LEA
+MOV cx
+PRINTLINE CODE in hex
+CALL NEWLINE
+LEA
+MOV cx
+CALL PAUSE
+
+return
+;--------------------------
+;push in 11 bit data only sequence
+;sets the parity bits
+;returns fully encoded sequence
+;--------------------------
+ENCODING
+in: CODE
+
+PUSH	CODE
+PUSH	MASK_8
+PUSH	3
+CALL	MASKING
+
+PUSH	ax
+PUSH	MASK_4
+PUSH	7
+CALL	MASKING
+
+PUSH	ax
+PUSH	MASK_2
+PUSH	9
+CALL	MASKING
+
+PUSH	ax
+PUSH	MASK_1
+PUSH	10
+CALL	MASKING
+
+return ax
+;--------------------------
+;push a sequence
+;returns 0 even or 1 odd
+;--------------------------
+PARITY
+
+CALL BITCOUNT
+PUSH ax
+CALL EVENODD
+
+return ax
+;--------------------------
+;masks the group
+;counts the bits
+;sets the parity bit for group
+;--------------------------
+MASKING
+in: CODE, MASK, PSHIFT
+
+ax = CODE
+ax = ax AND MASK
+push ax
+CALL PARITY
+ROL ax,PSHIFT
+ax = CODE OR ax
+
+return ax
+;--------------------------
+;positions data bits in 11 bit sequence
+;--------------------------
+SETUP
+in: PACKET
+
+ax = PACKET
+ax = ax AND MASK_A
+CODE = ax
+
+ax = PACKET
+ax = ax AND MASK_B
+ROL ax,1
+CODE = CODE OR ax
+
+ax = PACKET
+ax = ax AND MASK_C
+ROL ax,2
+ax = ax OR CODE
+
+return ax
+;--------------------------
