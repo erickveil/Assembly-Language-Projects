@@ -1,3 +1,11 @@
+COMMENT*
+	encode.asm
+	Erick Veil
+	10-17-11
+	Accepts a decimal number up to 7 bits
+	Encodes value into an 11 bit parity value
+*
+
 EXTRN	GETDEC$:FAR
 EXTRN	PUTDEC$:FAR
 EXTRN	PUTBIN:FAR
