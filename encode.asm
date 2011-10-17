@@ -16,7 +16,12 @@ PAGE		80,132
 	MASK_4	DW	0000000011110000B
 	MASK_8	DW	0000000000001111B
 	
-	TESTVAL	DW	00FFH
+	ROT_1	DB	10
+	ROT_2	DB	9
+	ROT_4	DB	7
+	ROT_8	DW	3
+	
+	TESTVAL	DW	00FEH
 
 .CODE 
 	ASSUME	DS:DSEG
@@ -40,16 +45,52 @@ MAIN	PROC	FAR
 	CALL	SETUP
 	
 	CALL	PUTBIN
+	CALL	NEWLINE	
+	
+	PUSH	AX
+	PUSH	MASK_8
+	PUSH	ROT_8
+	CALL	MASKING
+	
+	CALL	PUTBIN
 		
 .EXIT
 MAIN	ENDP
 
 COMMENT*
+	MASKING
+	Erick Veil
+	10-17-11
+	PRE: Pass via the stack: PACKET as an 11 bit vlaue with data 
+		bits set, BMASK as 11 bit value for the parity mask to be 
+		used, then PSHIFT, which is the number of places to 
+		shift the parity bit in order to set it. This number is 
+		11 minus the final position of the parity bit.
+	POST: Returns the 11 bit PACKET via AX with one of the 
+	parity bits set
+*
+MASKING	PROC	NEAR PUBLIC	PACKET:WORD, BMASK:WORD, PSHIFT:BYTE
+	PUSHF
+	
+	MOV		AX,PACKET
+	AND		AX,BMASK
+	PUSH	AX
+	CALL	PARITY
+	MOV		CL,PSHIFT
+	ROL		AX,CL
+	OR		AX,PACKET
+	
+	POPF
+	RET
+MASKING	ENDP
+
+COMMENT*
 	SETUP
 	Erick Veil
 	10-16-11
-	PRE: 
-	POST: 
+	PRE: Pass PACKET via the stack, a 7 bit value to be encoded
+	POST: Returns via AX an 11 bit value with the data bits set, 
+	ready for parity bits to be set.
 *
 SETUP	PROC	NEAR PUBLIC	PACKET:WORD
 	PUSHF
