@@ -1,3 +1,11 @@
+Encode
+
+input a 7 bit number, program encodes the data into an 11 bit number embedded with parity bits
+
+ml encode.asm io.lib
+or run mkencode.bat
+
+====================================================
 Parity
 
 input an unsigned word, it counts the number of set bits and determines if that number is even or odd.
