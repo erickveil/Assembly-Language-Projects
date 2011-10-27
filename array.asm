@@ -17,6 +17,7 @@ PAGE		80,132
 .FARDATA	DSEG
 	MON_STRT	db	0,8,17,23,29
 	MONTH		DB	'January$February$March$April$May'
+	TXT			DB	0
 	
 .CODE 
 	ASSUME	DS:DSEG,ES:DSEG
@@ -31,17 +32,37 @@ MAIN	PROC	FAR
 	call GET_STR_STRT
 	
 	
-	call PUTDEC$
+	push	ax
+	jmp BAAH
+	call 	PRINT_MON
+	BRR:
+	call	NEWLINE
+	call	NEWLINE
+	jmp YAA
 	
-
+	BAAH:
+	pop	ax
+	mov	dx,OFFSET MONTH
+	add	dx,ax
+	mov	ah,09
+	int	21H
+	jmp	BRR
+	YAA:
 	
-	
-
-	
-
 .EXIT
 MAIN	ENDP
 
+PRINT_MON	PROC	NEAR PUBLIC SUBSCRIPT:WORD
+	PUSHF
+
+	mov	dx,OFFSET MONTH
+	add	dx,SUBSCRIPT
+	mov	ah,09
+	int	21H
+	
+	RET
+	
+PRINT_MON	ENDP
 
 GET_STR_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	PUSHF
