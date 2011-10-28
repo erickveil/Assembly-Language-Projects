@@ -17,7 +17,7 @@ PAGE		80,132
 .FARDATA	DSEG
 	MON_STRT	db	0,8,17,23,29,33,37,42,49,59,67,76
 	MONTH		db	'January$February$March$April$May$Jun$July$August$September$October$November$December$'
-	DAY_STRT	db	0,8,15,23,33,42,49
+	DAY_STRT	db	0,7,14,22,32,41,48
 	DAY			db	'Sunday$Monday$Tuesday$Wednesday$Thursday$Friday$Saturday$'
 
 	
@@ -29,22 +29,31 @@ MAIN	PROC	FAR
 	MOV		ES,AX
 	
 	
-	mov	ax,3
-	
-	push ax
-	call GET_STR_STRT	
+	mov	ax,8
 	
 	push	ax
-	call 	PRINT_MON
+	call	GET_MON_STRT	
+	
+	push	ax
+	mov		dx,OFFSET MONTH
+	call 	PRINT_MEMBER
 	
 	
 .EXIT
 MAIN	ENDP
 
-PRINT_DAY	PROC	NEAR PUBLIC SUBSCRIPT:WORD
+COMMENT*
+	PRINT_MEMBER
+	Erick Veil
+	10-28-11
+	PRE: pass the start location via the stack, pass the 
+	arrray name via dx as an offset
+	POST: prints the element at subscript. 
+	Elements separated by $
+*
+PRINT_MEMBER	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	PUSHF
 
-	mov	dx,OFFSET DAY
 	add	dx,SUBSCRIPT
 	mov	ah,09
 	int	21H
@@ -52,7 +61,7 @@ PRINT_DAY	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	POPF
 	RET
 	
-PRINT_DAY	ENDP
+PRINT_MEMBER	ENDP
 
 GET_DAY_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	PUSHF
@@ -65,18 +74,6 @@ GET_DAY_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	RET
 GET_DAY_STRT	ENDP
 
-PRINT_MON	PROC	NEAR PUBLIC SUBSCRIPT:WORD
-	PUSHF
-
-	mov	dx,OFFSET MONTH
-	add	dx,SUBSCRIPT
-	mov	ah,09
-	int	21H
-	
-	POPF
-	RET
-	
-PRINT_MON	ENDP
 
 GET_MON_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	PUSHF
