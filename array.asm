@@ -28,14 +28,16 @@ MAIN	PROC	FAR
 	MOV		DS,AX
 	MOV		ES,AX
 	
+	mov	ax,7
 	
-	mov	ax,8
-	
+	lea		dx,MON_STRT
 	push	ax
-	call	GET_MON_STRT	
+	push	dx
+	call	GET_ELEMENT_VAL	
 	
+	lea		dx, MONTH
 	push	ax
-	mov		dx,OFFSET MONTH
+	push	dx
 	call 	PRINT_MEMBER
 	
 	
@@ -46,14 +48,15 @@ COMMENT*
 	PRINT_MEMBER
 	Erick Veil
 	10-28-11
-	PRE: pass the start location via the stack, pass the 
-	arrray name via dx as an offset
+	PRE: pass the start location via the stack, then pass the 
+	arrray name that starts the memory offset
 	POST: prints the element at subscript. 
 	Elements separated by $
 *
-PRINT_MEMBER	PROC	NEAR PUBLIC SUBSCRIPT:WORD
+PRINT_MEMBER	PROC	NEAR PUBLIC SUBSCRIPT:WORD, ARRAY:WORD
 	PUSHF
 
+	mov	dx,ARRAY
 	add	dx,SUBSCRIPT
 	mov	ah,09
 	int	21H
@@ -63,27 +66,26 @@ PRINT_MEMBER	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	
 PRINT_MEMBER	ENDP
 
-GET_DAY_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
+COMMENT*
+	GET_ELEMENT_VAL
+	Erick Veil
+	10-28-11
+	PRE: pass the array subscript via the stack, then pass the 
+	arrray name that starts the memory offset
+	eg: lea dx,ARRAY..push dx
+	POST: returns the contents of ARRAY at element SUBSCRIPT
+*
+GET_ELEMENT_VAL	PROC	NEAR PUBLIC SUBSCRIPT:WORD, ARRAY:WORD
 	PUSHF
 	
-	mov	di,SUBSCRIPT
-	mov	al,[DAY_STRT+di]
+	mov	di,ARRAY
+	add	di,SUBSCRIPT
+	mov	al,[di]
 	cbw
 	
 	POPF
 	RET
-GET_DAY_STRT	ENDP
+GET_ELEMENT_VAL	ENDP
 
-
-GET_MON_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
-	PUSHF
-	
-	mov	di,SUBSCRIPT
-	mov	al,[MON_STRT+di]
-	cbw
-	
-	POPF
-	RET
-GET_MON_STRT	ENDP
 
 END		MAIN
