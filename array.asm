@@ -15,9 +15,11 @@ PAGE		80,132
 .MODEL		SMALL,BASIC
 .STACK		64
 .FARDATA	DSEG
-	MON_STRT	db	0,8,17,23,29
-	MONTH		DB	'January$February$March$April$May'
-	TXT			DB	0
+	MON_STRT	db	0,8,17,23,29,33,37,42,49,59,67,76
+	MONTH		db	'January$February$March$April$May$Jun$July$August$September$October$November$December$'
+	DAY_STRT	db	0,8,15,23,33,42,49
+	DAY			db	'Sunday$Monday$Tuesday$Wednesday$Thursday$Friday$Saturday$'
+
 	
 .CODE 
 	ASSUME	DS:DSEG,ES:DSEG
@@ -28,29 +30,40 @@ MAIN	PROC	FAR
 	
 	
 	mov	ax,3
-	push ax
-	call GET_STR_STRT
 	
+	push ax
+	call GET_STR_STRT	
 	
 	push	ax
-	jmp BAAH
 	call 	PRINT_MON
-	BRR:
-	call	NEWLINE
-	call	NEWLINE
-	jmp YAA
 	
-	BAAH:
-	pop	ax
-	mov	dx,OFFSET MONTH
-	add	dx,ax
-	mov	ah,09
-	int	21H
-	jmp	BRR
-	YAA:
 	
 .EXIT
 MAIN	ENDP
+
+PRINT_DAY	PROC	NEAR PUBLIC SUBSCRIPT:WORD
+	PUSHF
+
+	mov	dx,OFFSET DAY
+	add	dx,SUBSCRIPT
+	mov	ah,09
+	int	21H
+	
+	POPF
+	RET
+	
+PRINT_DAY	ENDP
+
+GET_DAY_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
+	PUSHF
+	
+	mov	di,SUBSCRIPT
+	mov	al,[DAY_STRT+di]
+	cbw
+	
+	POPF
+	RET
+GET_DAY_STRT	ENDP
 
 PRINT_MON	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	PUSHF
@@ -60,11 +73,12 @@ PRINT_MON	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	mov	ah,09
 	int	21H
 	
+	POPF
 	RET
 	
 PRINT_MON	ENDP
 
-GET_STR_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
+GET_MON_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	PUSHF
 	
 	mov	di,SUBSCRIPT
@@ -73,6 +87,6 @@ GET_STR_STRT	PROC	NEAR PUBLIC SUBSCRIPT:WORD
 	
 	POPF
 	RET
-GET_STR_STRT	ENDP
+GET_MON_STRT	ENDP
 
 END		MAIN
