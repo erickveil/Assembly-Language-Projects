@@ -28,9 +28,9 @@ PAGE		80,132
 	ERR_DATE	db	'Date must be between 1 and $'
 	ERR_YEAR	db	'Year must be between 1901 and 2029.$'
 	ERR_MO		db	'Month must be a number from 1 to 12.$'
-	MONTH		db	0
-	YEAR		db	0
-	DATE		db	0
+	IN_MONTH	dw	0
+	IN_YEAR		dw	0
+	IN_DATE		dw	0
 	
 	
 .CODE 
@@ -41,11 +41,20 @@ MAIN	PROC	FAR
 	MOV		ES,AX
 	
 	call	VALID_YEAR
-	mov	YEAR,ax
+	mov		IN_YEAR,ax
+	
 	call	VALID_MONTH
-	mov	MONTH,ax
+	mov		IN_MONTH,ax
+	
+	push	IN_YEAR
+	push	IN_MONTH
 	call	VALID_DATE
-	mov	DATE,ax
+	mov		IN_DATE,ax
+	
+	push	IN_YEAR
+	call	GET_YEARDEC
+	call	PUTDEC$
+	call	NEWLINE
 	
 	
 	
@@ -68,22 +77,43 @@ MAIN	PROC	FAR
 MAIN	ENDP
 
 COMMENT*
+	GET_YEARDEC
+	Erick Veil
+	10-28-11
+	PRE: Pass the year via the stack
+	POST: returns the last two digits of the year via ax
+*
+GET_YEARDEC	PROC	NEAR PUBLIC	YEAR:WORD	
+	PUSHF
+	
+	mov	dx,0
+	mov	ax,YEAR
+	mov	bx,100
+	div	bx
+	mov	ax,dx	
+	
+	POPF
+	RET
+	
+GET_YEARDEC	ENDP
+
+COMMENT*
 	CALC_WEEKDAY
 	Erick Veil
 	10-28-11
 	PRE: 
 	POST: 
 *
-VALID_MONTH	PROC	NEAR PUBLIC	
+CALC_WEEKDAY	PROC	NEAR PUBLIC	
 	PUSHF
 	
-	mov	cx,DATE
+	mov	cx,IN_DATE
 	
-	push	YEAR
+	push	IN_YEAR
 	call	CENTMOD
 	add	cx,ax
 	
-	push	MONTH
+	push	IN_MONTH
 	call	MONTH_OFF
 	add	cx,ax
 	
@@ -92,15 +122,16 @@ VALID_MONTH	PROC	NEAR PUBLIC
 	POPF
 	RET
 	
-VALID_MONTH	ENDP
+CALC_WEEKDAY	ENDP
 
 COMMENT*
 	VALID_MONTH
 	Erick Veil
 	10-28-11
 	PRE: none
-	POST: prompts user toenter a month and makes sure 
-	it's in range, retuning a valid month on ax
+	POST: prompts user for a month, and validates that it 
+		is between 1 and 12. Decrements month by 1 and 
+		returns the result via ax
 *
 VALID_MONTH	PROC	NEAR PUBLIC
 	PUSHF
