@@ -18,9 +18,9 @@ PAGE		80,132
 	MON_STRT	db	0,8,17,23,29,33,37,42,49,59,67,76
 	MON_OFST	db	0,3,3,6,1,4,6,2,5,0,3,5
 	MON_LEN		db	31,28,31,30,31,30,31,31,30,31,30,31
-	MONTH		db	'January$February$March$April$May$Jun$July$August$September$October$November$December$'
+	MONTH_LST		db	'January$February$March$April$May$Jun$July$August$September$October$November$December$'
 	DAY_STRT	db	0,7,14,22,32,41,48
-	DAY			db	'Sunday$Monday$Tuesday$Wednesday$Thursday$Friday$Saturday$'
+	DAY_LST		db	'Sunday$Monday$Tuesday$Wednesday$Thursday$Friday$Saturday$'
 	CENT_OFST	db	0,6
 	PROMPT_YR	db	'Enter the year: $'
 	PROMPT_MO	db	'Enter the moth: $'
@@ -28,6 +28,10 @@ PAGE		80,132
 	ERR_DATE	db	'Date must be between 1 and $'
 	ERR_YEAR	db	'Year must be between 1901 and 2029.$'
 	ERR_MO		db	'Month must be a number from 1 to 12.$'
+	MONTH		db	0
+	YEAR		db	0
+	DATE		db	0
+	
 	
 .CODE 
 	ASSUME	DS:DSEG,ES:DSEG
@@ -36,9 +40,16 @@ MAIN	PROC	FAR
 	MOV		DS,AX
 	MOV		ES,AX
 	
-	call VALID_MONTH
+	call	VALID_YEAR
+	mov	YEAR,ax
+	call	VALID_MONTH
+	mov	MONTH,ax
+	call	VALID_DATE
+	mov	DATE,ax
 	
-	call	PUTDEC$
+	
+	
+	
 	
 	mov	ax,1
 	
@@ -47,7 +58,7 @@ MAIN	PROC	FAR
 	push	dx
 	call	GET_ELEMENT_VAL	
 	
-	lea		dx, MONTH
+	lea		dx, MONTH_LST
 	push	ax
 	push	dx
 	call 	PRINT_MEMBER
@@ -55,6 +66,33 @@ MAIN	PROC	FAR
 	
 .EXIT
 MAIN	ENDP
+
+COMMENT*
+	CALC_WEEKDAY
+	Erick Veil
+	10-28-11
+	PRE: 
+	POST: 
+*
+VALID_MONTH	PROC	NEAR PUBLIC	
+	PUSHF
+	
+	mov	cx,DATE
+	
+	push	YEAR
+	call	CENTMOD
+	add	cx,ax
+	
+	push	MONTH
+	call	MONTH_OFF
+	add	cx,ax
+	
+	
+	
+	POPF
+	RET
+	
+VALID_MONTH	ENDP
 
 COMMENT*
 	VALID_MONTH
@@ -91,7 +129,7 @@ VALID_MONTH	PROC	NEAR PUBLIC
 		jmp		PROMPT
 		
 	VALID:
-	
+		dec	ax
 	POPF
 	RET
 	
@@ -139,14 +177,60 @@ VALID_YEAR	PROC	NEAR PUBLIC
 VALID_YEAR	ENDP
 
 COMMENT*
-	CENYMOD
+	MONTH_OFF
+	Erick Veil
+	10-28-11
+	PRE: pass the month via the stack
+	POST: gets the offset modifier for the month
+*
+MONTH_OFF	PROC	NEAR PUBLIC uses dx bx, MON:WORD,YEAR:WORD
+	PUSHF
+	
+	; check if leapyear
+		mov	ax,YEAR
+		push	ax
+		call	GET_IS_LY
+		cmp	ax,0
+		jne	FROM_LIST
+	
+	; check if jan
+		mov	ax,MON
+		cmp	ax,0
+		jne	FROM_LIST
+		mov	ax,6
+		jmp	DONE
+		
+	; check if feb
+		mov	ax,MON
+		cmp	ax,1
+		jne	FROM_LIST
+		mov	ax,2
+		jmp	DONE
+		
+	; get value from array
+	FROM_LIST:
+		mov	ax,MON
+		lea		dx,CENT_OFST
+		push	ax
+		push	dx
+		call	GET_ELEMENT_VAL	
+
+	DONE:
+	
+	POPF
+	RET
+	
+MONTH_OFF	ENDP
+
+COMMENT*
+	CENTMOD
 	Erick Veil
 	10-28-11
 	PRE: pass the year via the stack
 	POST: gets a century modifier for the formula from an 
 		array. 0 = 1900s, 6 = 2000s and returns it via ax
 *
-CENYMOD	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD
+CENTMOD	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD
 	PUSHF
 	
 	; determine element, based on 1900s 0r 2000s
@@ -165,7 +249,7 @@ CENYMOD	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD
 	POPF
 	RET
 	
-CENYMOD	ENDP
+CENTMOD	ENDP
 
 COMMENT*
 	VALID_DATE
@@ -176,7 +260,6 @@ COMMENT*
 *
 VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 	PUSHF
-	
 	
 	; prompt for the day
 	PROMPT:
