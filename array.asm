@@ -23,7 +23,7 @@ PAGE		80,132
 	DAY_LST		db	'Sunday$Monday$Tuesday$Wednesday$Thursday$Friday$Saturday$'
 	CENT_OFST	db	0,6
 	PROMPT_YR	db	'Enter the year: $'
-	PROMPT_MO	db	'Enter the moth: $'
+	PROMPT_MO	db	'Enter the month: $'
 	PROMPT_DT	db	'Enter the date: $'
 	ERR_DATE	db	'Date must be between 1 and $'
 	ERR_YEAR	db	'Year must be between 1901 and 2029.$'
@@ -40,24 +40,27 @@ MAIN	PROC	FAR
 	MOV		DS,AX
 	MOV		ES,AX
 	
+	call	NEWLINE
+	
 	call	VALID_YEAR
 	mov		IN_YEAR,ax
 	
 	call	VALID_MONTH
 	mov		IN_MONTH,ax
 	
-	push	IN_YEAR
-	push	IN_MONTH
+	mov	ax,IN_YEAR
+	push	ax
+	mov	ax,IN_MONTH
+	push	ax
 	call	VALID_DATE
 	mov		IN_DATE,ax
 	
 	push	IN_YEAR
 	call	GET_YEARDEC
+	push	ax
+	call 	GET_NUM_LY
 	call	PUTDEC$
 	call	NEWLINE
-	
-	
-	
 	
 	
 	mov	ax,1
@@ -75,6 +78,26 @@ MAIN	PROC	FAR
 	
 .EXIT
 MAIN	ENDP
+
+COMMENT*
+	GET_NUM_LY
+	Erick Veil
+	10-28-11
+	PRE: Pass the year_dec via the stack
+	POST: returns the leap year modifier via ax
+		this is the number of ly in the current century
+*
+GET_NUM_LY	PROC	NEAR PUBLIC	YEAR:WORD	
+	PUSHF
+	
+	mov	dx,0
+	mov	ax,YEAR
+	mov	bx,4
+	div	bx	
+	
+	POPF
+	RET	
+GET_NUM_LY	ENDP
 
 COMMENT*
 	GET_YEARDEC
@@ -301,13 +324,13 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 		call 	PRINT_MEMBER
 		call	GETDEC$
 		
-	; get the month, check if feb
+	; get the month, check if feb		
+		push	ax
 		mov	bx,MON
 		cmp	bx,1
 		jne	LOOKUP_END	
 
 	; check for leap year
-		push	ax
 		mov	bx,YEAR
 		push	bx
 		call	GET_IS_LY
