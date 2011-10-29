@@ -26,7 +26,8 @@ PAGE		80,132
 	PROMPT_MO	db	'Enter the moth: $'
 	PROMPT_DT	db	'Enter the date: $'
 	ERR_DATE	db	'Date must be between 1 and $'
-
+	ERR_YEAR	db	'Year must be between 1901 and 2029.$'
+	ERR_MO		db	'Month must be a number from 1 to 12.$'
 	
 .CODE 
 	ASSUME	DS:DSEG,ES:DSEG
@@ -35,11 +36,9 @@ MAIN	PROC	FAR
 	MOV		DS,AX
 	MOV		ES,AX
 	
-	mov	ax,600
-	push	ax
-	mov ax,1
-	push	ax
-	call	VALID_DATE
+	call VALID_MONTH
+	
+	call	PUTDEC$
 	
 	mov	ax,1
 	
@@ -56,6 +55,117 @@ MAIN	PROC	FAR
 	
 .EXIT
 MAIN	ENDP
+
+COMMENT*
+	VALID_MONTH
+	Erick Veil
+	10-28-11
+	PRE: none
+	POST: prompts user toenter a month and makes sure 
+	it's in range, retuning a valid month on ax
+*
+VALID_MONTH	PROC	NEAR PUBLIC
+	PUSHF
+	
+	PROMPT:
+		mov		ax,0
+		lea		dx, PROMPT_MO
+		push	ax
+		push	dx
+		call 	PRINT_MEMBER
+		call	GETDEC$
+
+		cmp	ax,1
+		jb	INVALID
+		cmp	ax,12
+		ja	INVALID
+		jmp	VALID
+	
+	INVALID:
+		mov		ax,0
+		lea		dx, ERR_MO
+		push	ax
+		push	dx
+		call 	PRINT_MEMBER
+		call	NEWLINE
+		jmp		PROMPT
+		
+	VALID:
+	
+	POPF
+	RET
+	
+VALID_MONTH	ENDP
+
+COMMENT*
+	VALID_YEAR
+	Erick Veil
+	10-28-11
+	PRE: none
+	POST: prompts user toenter a year and makes sure 
+	it's in range, retuning a valid year on ax
+*
+VALID_YEAR	PROC	NEAR PUBLIC
+	PUSHF
+	
+	PROMPT:
+		mov		ax,0
+		lea		dx, PROMPT_YR
+		push	ax
+		push	dx
+		call 	PRINT_MEMBER
+		call	GETDEC$
+
+		cmp	ax,1901
+		jb	INVALID
+		cmp	ax,2029
+		ja	INVALID
+		jmp	VALID
+	
+	INVALID:
+		mov		ax,0
+		lea		dx, ERR_YEAR
+		push	ax
+		push	dx
+		call 	PRINT_MEMBER
+		call	NEWLINE
+		jmp		PROMPT
+		
+	VALID:
+	
+	POPF
+	RET
+	
+VALID_YEAR	ENDP
+
+COMMENT*
+	CENYMOD
+	Erick Veil
+	10-28-11
+	PRE: pass the year via the stack
+	POST: gets a century modifier for the formula from an 
+		array. 0 = 1900s, 6 = 2000s and returns it via ax
+*
+CENYMOD	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD
+	PUSHF
+	
+	; determine element, based on 1900s 0r 2000s
+	mov	ax,YEAR
+	mov	dx,0
+	mov	bx,100
+	div	bx
+	sub	ax,19
+	
+	; get value from array
+	lea		dx,CENT_OFST
+	push	ax
+	push	dx
+	call	GET_ELEMENT_VAL	
+	
+	POPF
+	RET
+	
+CENYMOD	ENDP
 
 COMMENT*
 	VALID_DATE
@@ -95,7 +205,7 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 		mov	bx,29
 		jmp	VALIDATE
 		
-	;get the legnth of the month
+	;get the legnth of the month from array
 	LOOKUP_END:
 		mov	bx,MON
 		lea	dx,MON_LEN
