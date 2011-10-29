@@ -48,17 +48,12 @@ MAIN	PROC	FAR
 	call	VALID_MONTH
 	mov		IN_MONTH,ax
 	
-	mov	ax,IN_YEAR
-	push	ax
-	mov	ax,IN_MONTH
-	push	ax
+	push	IN_YEAR
+	push	IN_MONTH
 	call	VALID_DATE
 	mov		IN_DATE,ax
 	
-	push	IN_YEAR
-	call	GET_YEARDEC
-	push	ax
-	call 	GET_NUM_LY
+	call	CALC_WEEKDAY
 	call	PUTDEC$
 	call	NEWLINE
 	
@@ -124,23 +119,53 @@ COMMENT*
 	CALC_WEEKDAY
 	Erick Veil
 	10-28-11
-	PRE: 
-	POST: 
+	PRE: requires variables IN_YEAR, IN_MONTH,and 
+		IN_DATE to hold valid values
+	POST: returns a number from 0 to 6 
+		representing the day of the week
 *
-CALC_WEEKDAY	PROC	NEAR PUBLIC	
+CALC_WEEKDAY	PROC	NEAR PUBLIC	uses cx dx bx
 	PUSHF
 	
 	mov	cx,IN_DATE
+	mov	ax,cx
+	call	PUTDEC$
+	call	NEWLINE
 	
 	push	IN_YEAR
-	call	CENTMOD
+	call	NEWLINE
+	call	PUTDEC$
+	call	NEWLINE
+	add	cx,ax
+	
+	push	IN_YEAR
+	call	NEWLINE
+	call	PUTDEC$
+	call	NEWLINE
+	add	cx,ax
+	
+	push	ax
+	call	GET_NUM_LY
+	call	PUTDEC$
+	call	NEWLINE
 	add	cx,ax
 	
 	push	IN_MONTH
+	push	IN_YEAR
 	call	MONTH_OFF
-	add	cx,ax
+	call	PUTDEC$
+	call	NEWLINE
+	add	cx,ax		
 	
-	
+	mov	dx,0
+	mov	ax,cx
+	call	PUTDEC$
+	call	NEWLINE
+	mov	bx,7
+	div	bx
+	mov	ax,dx	
+	call	PUTDEC$
+	call	NEWLINE
 	
 	POPF
 	RET
@@ -159,7 +184,7 @@ COMMENT*
 VALID_MONTH	PROC	NEAR PUBLIC
 	PUSHF
 	
-	PROMPT:
+	PROMPT_M:
 		mov		ax,0
 		lea		dx, PROMPT_MO
 		push	ax
@@ -168,21 +193,21 @@ VALID_MONTH	PROC	NEAR PUBLIC
 		call	GETDEC$
 
 		cmp	ax,1
-		jb	INVALID
+		jb	INVALID_M
 		cmp	ax,12
-		ja	INVALID
-		jmp	VALID
+		ja	INVALID_M
+		jmp	VALID_M
 	
-	INVALID:
+	INVALID_M:
 		mov		ax,0
 		lea		dx, ERR_MO
 		push	ax
 		push	dx
 		call 	PRINT_MEMBER
 		call	NEWLINE
-		jmp		PROMPT
+		jmp		PROMPT_M
 		
-	VALID:
+	VALID_M:
 		dec	ax
 	POPF
 	RET
@@ -200,7 +225,7 @@ COMMENT*
 VALID_YEAR	PROC	NEAR PUBLIC
 	PUSHF
 	
-	PROMPT:
+	PROMPT_Y:
 		mov		ax,0
 		lea		dx, PROMPT_YR
 		push	ax
@@ -209,21 +234,21 @@ VALID_YEAR	PROC	NEAR PUBLIC
 		call	GETDEC$
 
 		cmp	ax,1901
-		jb	INVALID
+		jb	INVALID_Y
 		cmp	ax,2029
-		ja	INVALID
-		jmp	VALID
+		ja	INVALID_Y
+		jmp	VALID_Y
 	
-	INVALID:
+	INVALID_Y:
 		mov		ax,0
 		lea		dx, ERR_YEAR
 		push	ax
 		push	dx
 		call 	PRINT_MEMBER
 		call	NEWLINE
-		jmp		PROMPT
+		jmp		PROMPT_Y
 		
-	VALID:
+	VALID_Y:
 	
 	POPF
 	RET
@@ -264,7 +289,7 @@ MONTH_OFF	PROC	NEAR PUBLIC uses dx bx, MON:WORD,YEAR:WORD
 	; get value from array
 	FROM_LIST:
 		mov	ax,MON
-		lea		dx,CENT_OFST
+		lea		dx,MON_OFST
 		push	ax
 		push	dx
 		call	GET_ELEMENT_VAL	
@@ -316,13 +341,16 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 	PUSHF
 	
 	; prompt for the day
-	PROMPT:
+	PROMPT_D:
 		mov	ax,0
 		lea	dx,PROMPT_DT
 		push	ax
 		push	dx
 		call 	PRINT_MEMBER
 		call	GETDEC$
+	; not even printing here
+	call	PUTDEC$
+	call	NEWLINE
 		
 	; get the month, check if feb		
 		push	ax
@@ -340,7 +368,7 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 	; adjust for leap year
 		; store legnth in bx
 		mov	bx,29
-		jmp	VALIDATE
+		jmp	VALIDATE_D
 		
 	;get the legnth of the month from array
 	LOOKUP_END:
@@ -354,15 +382,18 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 			
 	; validate date in range
 	;ax=entered date, bx=month end
-	VALIDATE:
+	VALIDATE_D:
 		pop	ax
+		
+		call	PUTDEC$
+		call	NEWLINE
 		cmp	ax,bx
-		ja	INVALID
+		ja	INVALID_D
 		cmp	ax,1
-		jb	INVALID
-		jmp	VALID		
+		jb	INVALID_D
+		jmp	VALID_D	
 	
-	INVALID:
+	INVALID_D:
 		mov	ax,0
 		lea	dx,ERR_DATE
 		push	ax
@@ -372,9 +403,9 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 		mov	bh,0
 		call	PUTDEC$
 		call	NEWLINE
-		jmp	PROMPT
+		jmp	PROMPT_D
 		
-	VALID:
+	VALID_D:
 	
 	POPF
 	RET
