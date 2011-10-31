@@ -31,6 +31,7 @@ PAGE		80,132
 	IN_MONTH	dw	0
 	IN_YEAR		dw	0
 	IN_DATE		dw	0
+	MSG_REPORT	db	' is a $'
 	
 	
 .CODE 
@@ -54,8 +55,10 @@ MAIN	PROC	FAR
 	mov		IN_DATE,ax
 	
 	call	CALC_WEEKDAY
-	call	PUTDEC$
-	call	NEWLINE
+	
+	push	ax
+	call	PRINT_DAY_TEXT
+	
 	
 	
 	mov	ax,1
@@ -73,6 +76,32 @@ MAIN	PROC	FAR
 	
 .EXIT
 MAIN	ENDP
+
+COMMENT*
+	PRINT_DAY_TEXT
+	Erick Veil
+	10-31-11
+	PRE: pass the 0-6 number representing the day of the week
+	POST: outputs the name of the day
+*
+PRINT_DAY_TEXT	PROC	NEAR PUBLIC	uses ax dx, WEEKDAY:WORD	
+	PUSHF
+	
+	;get the start location from the array
+	push	WEEKDAY
+	lea		dx,DAY_STRT
+	push	dx
+	call	GET_ELEMENT_VAL
+	
+	;get the weekday name from the array, starting at start location
+	push	ax
+	lea		dx,DAY_LST
+	push	dx
+	call	PRINT_MEMBER	
+	
+	POPF
+	RET	
+PRINT_DAY_TEXT	ENDP
 
 COMMENT*
 	GET_NUM_LY
@@ -335,9 +364,6 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 		push	dx
 		call 	PRINT_MEMBER
 		call	GETDEC$
-	; not even printing here
-	call	PUTDEC$
-	call	NEWLINE
 		
 	; get the month, check if feb		
 		push	ax
@@ -371,9 +397,6 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 	;ax=entered date, bx=month end
 	VALIDATE_D:
 		pop	ax
-		
-		call	PUTDEC$
-		call	NEWLINE
 		cmp	ax,bx
 		ja	INVALID_D
 		cmp	ax,1
@@ -388,8 +411,6 @@ VALID_DATE	PROC	NEAR PUBLIC uses dx bx, YEAR:WORD, MON:WORD
 		call 	PRINT_MEMBER
 		mov	ax,bx
 		mov	bh,0
-		call	PUTDEC$
-		call	NEWLINE
 		jmp	PROMPT_D
 		
 	VALID_D:
