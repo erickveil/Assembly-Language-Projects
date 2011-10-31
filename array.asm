@@ -4,21 +4,19 @@ COMMENT*
 
 EXTRN	GETDEC$:FAR
 EXTRN	PUTDEC$:FAR
-EXTRN	PUTBIN:FAR
-EXTRN	PUTOCT:FAR
-EXTRN	PUTSTRNG:FAR
 EXTRN	NEWLINE:FAR
 EXTRN	PAUSE:FAR
-EXTERN	CLEAR:FAR
+EXTRN	CLEAR:FAR
+EXTRN	BLANKS:FAR
 
 PAGE		80,132
 .MODEL		SMALL,BASIC
 .STACK		64
 .FARDATA	DSEG
-	MON_STRT	db	0,8,17,23,29,33,37,42,49,59,67,76
+	MON_STRT	db	0,9,19,26,33,38,44,50,58,69,78,88
 	MON_OFST	db	0,3,3,6,1,4,6,2,5,0,3,5
 	MON_LEN		db	31,28,31,30,31,30,31,31,30,31,30,31
-	MONTH_LST		db	'January$February$March$April$May$Jun$July$August$September$October$November$December$'
+	MONTH_LST		db	'January $February $March $April $May $June $July $August $September $October $November $December $'
 	DAY_STRT	db	0,7,14,22,32,41,48
 	DAY_LST		db	'Sunday$Monday$Tuesday$Wednesday$Thursday$Friday$Saturday$'
 	CENT_OFST	db	0,6
@@ -32,6 +30,7 @@ PAGE		80,132
 	IN_YEAR		dw	0
 	IN_DATE		dw	0
 	MSG_REPORT	db	' is a $'
+	MSG_COMMA	db	', $'
 	
 	
 .CODE 
@@ -57,14 +56,65 @@ MAIN	PROC	FAR
 	call	CALC_WEEKDAY
 	
 	push	ax
+	call	REPORT
+	
+	
+.EXIT
+MAIN	ENDP
+
+COMMENT*
+	REPORT
+	Erick Veil
+	10-31-11
+	PRE: 
+	POST: 
+*
+REPORT	PROC	NEAR PUBLIC	uses dx WEEKDAY:WORD
+	PUSHF
+	
+	call	NEWLINE
+	
+	call	PRINT_MONTH_TEXT
+	
+	mov		ax,IN_DATE
+	call	PUTDEC$
+	
+	lea		dx,MSG_COMMA
+	mov		ax,0
+	push	ax
+	push	dx
+	call	PRINT_MEMBER
+	
+	mov		ax,IN_YEAR
+	call	PUTDEC$
+	
+	lea		dx,MSG_REPORT
+	mov		ax,0
+	push	ax
+	push	dx
+	call	PRINT_MEMBER
+	
+	push	WEEKDAY
 	call	PRINT_DAY_TEXT
 	
+	call	NEWLINE	
 	
-	
-	mov	ax,1
+	POPF
+	RET	
+REPORT	ENDP
+
+COMMENT*
+	PRINT_MONTH_TEXT
+	Erick Veil
+	10-31-11
+	PRE: IN_MONTH should be set to the correct month to display
+	POST: Prints the name of the numeric value saved in IN_MONTH
+*
+PRINT_MONTH_TEXT	PROC	NEAR PUBLIC	uses dx
+	PUSHF
 	
 	lea		dx,MON_STRT
-	push	ax
+	push	IN_MONTH
 	push	dx
 	call	GET_ELEMENT_VAL	
 	
@@ -73,9 +123,9 @@ MAIN	PROC	FAR
 	push	dx
 	call 	PRINT_MEMBER
 	
-	
-.EXIT
-MAIN	ENDP
+	POPF
+	RET	
+PRINT_MONTH_TEXT	ENDP
 
 COMMENT*
 	PRINT_DAY_TEXT
