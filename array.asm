@@ -1,4 +1,11 @@
 COMMENT*
+	array.asm
+	Erick Veil
+	10-31-2011
+	
+	Input numeric date and learn the day of the week.
+	An exercise showing the use of simulated arrays
+	using memory offsets in asm
 
 *
 
@@ -16,7 +23,7 @@ PAGE		80,132
 	MON_STRT	db	0,9,19,26,33,38,44,50,58,69,78,88
 	MON_OFST	db	0,3,3,6,1,4,6,2,5,0,3,5
 	MON_LEN		db	31,28,31,30,31,30,31,31,30,31,30,31
-	MONTH_LST		db	'January $February $March $April $May $June $July $August $September $October $November $December $'
+	MONTH_LST	db	'January $February $March $April $May $June $July $August $September $October $November $December $'
 	DAY_STRT	db	0,7,14,22,32,41,48
 	DAY_LST		db	'Sunday$Monday$Tuesday$Wednesday$Thursday$Friday$Saturday$'
 	CENT_OFST	db	0,6
@@ -31,6 +38,7 @@ PAGE		80,132
 	IN_DATE		dw	0
 	MSG_REPORT	db	' is a $'
 	MSG_COMMA	db	', $'
+	MSG_PAUSE	db	'Press a key to continue..' ;25
 	
 	
 .CODE 
@@ -58,6 +66,11 @@ MAIN	PROC	FAR
 	push	ax
 	call	REPORT
 	
+	call	NEWLINE
+	lea		di,MSG_PAUSE
+	mov		cx,25
+	call	PAUSE
+	
 	
 .EXIT
 MAIN	ENDP
@@ -66,8 +79,8 @@ COMMENT*
 	REPORT
 	Erick Veil
 	10-31-11
-	PRE: 
-	POST: 
+	PRE: pass the numeric day of the week via the stack. Also have all dates calculated
+	POST: prints the final report
 *
 REPORT	PROC	NEAR PUBLIC	uses dx WEEKDAY:WORD
 	PUSHF
@@ -495,7 +508,7 @@ COMMENT*
 	PRINT_MEMBER
 	Erick Veil
 	10-28-11
-	PRE: pass the start location via the stack, then pass the 
+	PRE: pass the start location of the string via the stack, then pass the 
 	arrray name that starts the memory offset
 	POST: prints the element at subscript. 
 	Elements separated by $
