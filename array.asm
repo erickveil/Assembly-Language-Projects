@@ -126,46 +126,33 @@ COMMENT*
 *
 CALC_WEEKDAY	PROC	NEAR PUBLIC	uses cx dx bx
 	PUSHF
+	call	NEWLINE
 	
 	mov	cx,IN_DATE
-	mov	ax,cx
-	call	PUTDEC$
-	call	NEWLINE
 	
 	push	IN_YEAR
-	call	NEWLINE
-	call	PUTDEC$
-	call	NEWLINE
-	add	cx,ax
+	call	CENTMOD
+	add		cx,ax
 	
 	push	IN_YEAR
-	call	NEWLINE
-	call	PUTDEC$
-	call	NEWLINE
-	add	cx,ax
+	call	GET_YEARDEC
+	add		cx,ax
 	
 	push	ax
 	call	GET_NUM_LY
-	call	PUTDEC$
-	call	NEWLINE
-	add	cx,ax
+	add		cx,ax
 	
 	push	IN_MONTH
 	push	IN_YEAR
 	call	MONTH_OFF
-	call	PUTDEC$
-	call	NEWLINE
-	add	cx,ax		
+	add		cx,ax	
 	
+	; MOD 7
 	mov	dx,0
 	mov	ax,cx
-	call	PUTDEC$
-	call	NEWLINE
 	mov	bx,7
 	div	bx
-	mov	ax,dx	
-	call	PUTDEC$
-	call	NEWLINE
+	mov	ax,dx
 	
 	POPF
 	RET
