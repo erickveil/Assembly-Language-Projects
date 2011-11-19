@@ -19,15 +19,16 @@ PAGE		80,132
 .MODEL		SMALL,BASIC
 .STACK		64
 .FARDATA	DSEG
-	digbot	dw	10
-	digtop	dw	20
-	top		db	20 dup (0)
-	bottom	db	10 dup (0)
-	product	db	20 dup (0)
+	digbot	dw	21
+	digtop	dw	21
+	top		db	21 dup (0)
+	bottom	db	21 dup (0)
+	product	db	21 dup (0)
 	CARRY	db	0
 	MSG_PAUSE	db	'Press a key to continue..' ;25
-	MSG_PROMPT	db	'Enter the first number: ' ;
-	HEAD		db	'*** BCD Multiplication by Erick Veil ***' ;
+	PROMPT_TOP	db	'Enter the first number:  ' ;25
+	PROMPT_BOT	db	'Enter the second number: ' ;25
+	HEAD		db	'*** BCD Multiplication by Erick Veil ***' ;40
 
 .CODE 
 	ASSUME	DS:DSEG,ES:DSEG
@@ -36,55 +37,116 @@ MAIN	PROC	FAR
 	MOV		DS,AX
 	MOV		ES,AX
 
-	call	PRINTTOP
-	call	INPUTTOP
-
-	
+	call	BODY
 	
 .EXIT
 MAIN	ENDP
 
+BODY		PROC	NEAR PUBLIC
+	PUSHF
+
+	call	HEADER
+	call	INPUTTOP
+	call	INPUTBOT
+	call	NEWLINE
+	call	BCDMUL
+	call	PRINTPRODUCT
+	lea		di,MSG_PAUSE
+	mov		cx,25
+	call	PAUSE	
+	
+	POPF
+	RET
+BODY		ENDP
+
+HEADER		PROC	NEAR PUBLIC
+	PUSHF
+
+	call	NEWLINE	
+	mov		cx,40
+	lea		di, HEAD
+	call	PUTSTRNG	
+	call	NEWLINE
+	call	NEWLINE
+	
+	POPF
+	RET
+HEADER		ENDP
+
+INPUTBOT		PROC	NEAR PUBLIC
+	PUSHF
+	
+	; prompt
+	mov		cx,25
+	lea		di, PROMPT_BOT
+	call	PUTSTRNG	
+	; get input as string
+	lea		di,bottom
+	mov		cx,digbot
+	call	GETSTRNG	
+	; convert input array to integer array
+	lea		di,bottom
+	mov		cx,digbot
+	push	cx
+	call	STRTOINT
+	
+	POPF
+	RET
+INPUTBOT		ENDP
+
 INPUTTOP		PROC	NEAR PUBLIC
 	PUSHF
 	
+	; prompt
+	mov		cx,25
+	lea		di, PROMPT_TOP
+	call	PUTSTRNG	
+	; get input as string
+	lea		di,top
+	mov		cx,digbot
+	call	GETSTRNG	
+	; convert input array to integer array
 	lea		di,top
 	mov		cx,digtop
-	call	GETSTRNG
-	call	PRINTTOP
+	push	cx
 	call	STRTOINT
-	call	PRINTTOP
 	
 	POPF
 	RET
 INPUTTOP		ENDP
 
 ; converts string of ascii to array of integers
-STRTOINT		PROC	NEAR PUBLIC
+; load the start of the array into di, push the size of the array to the stack
+STRTOINT		PROC	NEAR PUBLIC		max:word
 	PUSHF
-	
-	; bx is element for searching
-	mov		bx,digtop
+
+	; dx is element for searching
+	mov		dx,max
 	; cx is element for printing
-	mov		cx,digtop
+	mov		cx,max
 	dec		cx
-	
+	; bx is memory offset
+	mov		bx,0
+	; ah is 0 constant for code requirements
+	mov		ah,0
+
 	strintloop:
-		dec		bx
-		mov		di,bx	
+		dec		dx
+		mov		bx,dx	
 		; check for trailing zeros (ascii zeros = 48)
-		cmp		top[di],0
+		cmp		[di+bx],ah
 		je		strintloop
-		
+
 		; digit is ascii number, convert it
-		mov		al,top[di]
+		mov		al,[di+bx]
 		sub		al,48
 		; place converted number in appropriate element
-		mov		di,cx
-		mov		top[di],al
+		mov		bx,cx
+		mov		[di+bx],al
 		; move to next print element
 		dec		cx
 		; check to see if whole search completed	
-		cmp		bx,0
+		cmp		dx,0
 		jne		strintloop
 		; search completed, fill rest of array with zeros
 		cmp		cx,0
@@ -93,8 +155,8 @@ STRTOINT		PROC	NEAR PUBLIC
 		loopfill:
 			dec		cx
 		startfill:
-			mov		di,cx
-			mov		top[di],0
+			mov		bx,cx
+			mov		[di+bx],ah
 			; check if whole array filled
 			cmp		cx,0
 			jne		loopfill
@@ -273,8 +335,6 @@ BCDMUL		PROC	NEAR PUBLIC
 	PUSHF
 	
 	main_loop:
-;call	PRINTTOP
-;call	PRINTBOTTOM
 		mov	di,digbot
 		dec	di
 		; test lsb for odd/even
@@ -286,14 +346,11 @@ BCDMUL		PROC	NEAR PUBLIC
 		je		noadd
 		; odd, add to accumulator
 			call	ADDLOOP
-		noadd:	
-		call	PRINTPRODUCT		
+		noadd:		
 		; double top, add carry
 		call	DUBLOOP
-		call	PRINTTOP
 		; half bottom, add borrows
-		call	HAFLOOP	
-		call	PRINTBOTTOM
+		call	HAFLOOP
 	; continue until bottom value is zero
 
 ;call	NEWLINE
@@ -310,14 +367,29 @@ PRINTPRODUCT	PROC	NEAR PUBLIC uses ax bx di
 	
 	; di is element
 	mov		di,0
+	; ah is trailing zero flag
+	mov		ah,0
 	printloop:
-		mov		al,product[di]
-		cbw
-		mov		bh,0
-		call	PUTDEC$
+		; if zero, check trailing zero flag
+		cmp		product[di],0
+		jne		validprint
+		; if flag = 0, skip this print
+		cmp		ah,0
+		je		nextprint	
+		validprint:
+			; print digits
+			mov		al,product[di]
+			cbw
+			mov		bh,0
+			call	PUTDEC$
+			; set trailing flag
+			mov		ah,1
+	; next element
+	nextprint:
 	inc		di
 	cmp		di,digtop
 	jne		printloop
+	call	NEWLINE
 	call	NEWLINE
 	
 	POPF
