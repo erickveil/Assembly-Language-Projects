@@ -22,4 +22,7 @@ ml randmain.asm rand2.asm io.lib
 
 or run makerand.bat
 
+. . . 
+
+
 Goal: call random proc, seeded by the system clock, range 0-9999, 100 times and display the numbers. Then switch the seed to 5555h, call the proc 100 more times. Collect and print total data regarding: how many even or odd numbers returned, was number < or > 500.
